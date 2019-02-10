@@ -22,6 +22,20 @@ export class Login extends Component {
 
     
   render() {
+    var errorCtrl = <View />;
+
+    if(!this.state.success && this.state.badCredentials){
+      errorCtrl = <Text style={styles.error}>
+          That username and password combination did not work
+      </Text>;
+    }
+
+    if(!this.state.success && this.state.unknownError){
+      errorCtrl = <Text style={styles.error}>
+          We experienced an unexpected issue
+      </Text>;
+    }
+
     return (
       <View style={styles.container}>
             <Image style={styles.logo} source={require('./img/rlgava.jpg')} />
@@ -45,6 +59,8 @@ export class Login extends Component {
                 <Text style={styles.buttonText}>Log In</Text>
             </TouchableHighlight>
 
+            {errorCtrl}
+
             <ActivityIndicator
                 animating={this.state.showProgress}
                 size="large"
@@ -59,23 +75,54 @@ export class Login extends Component {
       console.log('Attempting to log in with username ' + this.state.username);
       this.setState({showProgress: true});
 
-      const b = new buffer.Buffer(this.state.username + ':' + this.state.password);
-      const encodedAuth = b.toString('base64');
+      var authService = require('./AuthService');
+      authService.login({
+          username: this.state.username,
+          password: this.state.password
+      }, (results) => {
+        this.setState(Object.assign({
+          showProgress: false
+        }, results));
 
-      fetch('https://api.github.com/user', {
-        headers: {
-          'Authorization' : 'Basic' + encodedAuth
+        if(results.success && this.props.onLogin){
+          this.props.onLogin()
         }
-      })
-      .then((response) => {
-          return response.json();
-      })
-      .then((results) => {
-        console.log(results);
-        this.setState({showProgress: false});
       });
+    }
   }
-}
+
+      // var b = new buffer.Buffer(this.state.username + ':' + this.state.password);
+      // var encodedAuth = b.toString('base64');
+
+      // fetch('https://api.github.com/user', {
+      //   headers: {
+      //     'Authorization' : 'Basic' + encodedAuth
+      //   }
+      // })
+      // .then((response) => {
+      //   if(response.status >= 200 && response.status < 300){
+      //     return repsonse;
+      //   }
+      //   throw {
+      //     badCredentials: response.status == 401,
+      //     unknownError: response.status != 401
+      //   }
+      // })
+      // .then((response) => {
+      //     return response.json();
+      // })
+      // .then((results) => {
+      //   console.log(results);
+      //   this.setState({success: true});
+      // })
+      // .catch((err) => {
+      //   this.setState(err);
+      // })
+      // .finally(() => {
+      //   this.setState({showProgress: false});
+      // });
+  
+
 
 const styles = StyleSheet.create({
   container: {
@@ -128,5 +175,10 @@ const styles = StyleSheet.create({
   },
   loader: {
      marginTop: 20 
+  }, 
+  error: {
+    color: 'red',
+    fontWeight: 'bold',
+    paddingTop: 10
   }
 });

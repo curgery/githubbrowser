@@ -5,9 +5,12 @@ import { Login } from './Login';
 export default class App extends React.Component {
   render() {
     return (
-      <Login />
+      <Login onLogin={this.onLogin}/>
     );
   }
+}
+function onLogin() {
+  console.log('successfully logged in, can show different view');
 }
 
 const styles = StyleSheet.create({
